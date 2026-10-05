@@ -19,7 +19,6 @@ body {
   background: #eef1f6; color: #1f2937; height: 100vh;
 }
 
-/* ============ APP LAYOUT — FIXED HEIGHT, TWO SCROLLABLE PANELS ============ */
 .app {
   display: grid;
   grid-template-columns: 430px 1fr;
@@ -29,14 +28,11 @@ body {
   overflow: hidden;
 }
 
-/* ============ EDITOR PANEL (Scrollable) ============ */
 .editor-panel {
   background: #fff; border-radius: 14px; padding: 20px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow-y: auto; overflow-x: hidden;
   height: 100%;
-  /* Custom scrollbar */
   scrollbar-width: thin;
   scrollbar-color: #c7d2fe #f3f4f6;
 }
@@ -182,36 +178,24 @@ input:focus, select:focus, textarea:focus {
 .del-q { background: #fee2e2; color: #991b1b; }
 .del-q:hover { background: #fecaca; }
 
-/* ============ PREVIEW PANEL (Scrollable) ============ */
 .preview-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  min-width: 0;
-  height: 100%;
-  overflow: hidden;
+  display: flex; flex-direction: column; gap: 14px;
+  min-width: 0; height: 100%; overflow: hidden;
 }
-
 .preview-toolbar {
   background: #fff; padding: 12px 18px; border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
   font-weight: 600; color: #374151; font-size: 0.9rem;
   display: flex; justify-content: space-between; align-items: center;
-  flex-wrap: wrap; gap: 6px;
-  flex-shrink: 0;
+  flex-wrap: wrap; gap: 6px; flex-shrink: 0;
 }
 .page-indicator { font-size: 0.8rem; color: var(--gray); font-weight: 500; }
 
-/* Scrollable paper area */
 .paper-scroll-area {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: auto;
+  flex: 1; overflow-y: auto; overflow-x: auto;
   padding: 4px 4px 20px 4px;
-  scrollbar-width: thin;
-  scrollbar-color: #c7d2fe #f3f4f6;
-  background: #eef1f6;
-  border-radius: 10px;
+  scrollbar-width: thin; scrollbar-color: #c7d2fe #f3f4f6;
+  background: #eef1f6; border-radius: 10px;
 }
 .paper-scroll-area::-webkit-scrollbar { width: 10px; height: 10px; }
 .paper-scroll-area::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 10px; }
@@ -224,12 +208,11 @@ input:focus, select:focus, textarea:focus {
   min-width: fit-content;
 }
 
-/* ============ A4 PAGE ============ */
 .a4-page {
   width: 210mm;
   height: 297mm;
   background: #fff;
-  padding: 10mm 12mm 12mm 12mm;
+  padding: 10mm 12mm 14mm 12mm;
   box-shadow: 0 4px 25px rgba(0,0,0,0.12);
   font-family: 'Times New Roman', Georgia, serif;
   color: #000;
@@ -243,12 +226,11 @@ input:focus, select:focus, textarea:focus {
 
 .a4-page.has-border {
   border: 1.5pt solid #000;
-  padding: 8mm 10mm 10mm 10mm;
+  padding: 8mm 10mm 12mm 10mm;
 }
 
 .page-content { display: block; width: 100%; }
 
-/* Watermark */
 .page-watermark {
   position: absolute;
   top: 50%; left: 50%;
@@ -266,12 +248,10 @@ input:focus, select:focus, textarea:focus {
 }
 .a4-page .page-content { position: relative; z-index: 1; }
 
-/* Footer — tight at bottom */
 .page-footer {
   position: absolute;
   bottom: 4mm;
-  left: 12mm;
-  right: 12mm;
+  left: 12mm; right: 12mm;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -282,14 +262,10 @@ input:focus, select:focus, textarea:focus {
   font-family: 'Times New Roman', Georgia, serif;
   z-index: 1;
 }
-.a4-page.has-border .page-footer {
-  left: 10mm;
-  right: 10mm;
-}
+.a4-page.has-border .page-footer { left: 10mm; right: 10mm; }
 .page-footer .footer-left { font-style: italic; }
 .page-footer .footer-right { font-weight: bold; }
 
-/* Repeating page header */
 .page-header-repeat {
   text-align: center;
   border-bottom: 1pt solid #000;
@@ -308,7 +284,6 @@ input:focus, select:focus, textarea:focus {
   margin-top: 1px; text-transform: uppercase;
 }
 
-/* Full header on first page */
 .paper-header {
   text-align: center;
   border-bottom: 2px solid #000;
@@ -344,54 +319,63 @@ input:focus, select:focus, textarea:focus {
 .paper-instructions ul { margin: 2px 0 0 14px; }
 .paper-instructions li { margin-bottom: 0; }
 
-.paper-section { margin-bottom: 8px; }
 .section-heading {
   background: #1f2937; color: #fff; padding: 3px 10px;
   font-weight: bold; font-size: 9.5pt; text-align: center;
-  letter-spacing: 0.5px; margin-bottom: 5px; text-transform: uppercase;
+  letter-spacing: 0.5px; margin-bottom: 6px; margin-top: 6px;
+  text-transform: uppercase;
 }
 
-/* Two-column grid with vertical separator */
-.section-questions-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 5px 0;
-  align-items: start;
+.section-questions-2col {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  gap: 0;
   position: relative;
+  margin-bottom: 6px;
 }
 
-.section-questions-grid.separated { column-gap: 0; }
-.section-questions-grid.separated::before {
+.section-questions-2col.separated::before {
   content: '';
   position: absolute;
-  top: 0; bottom: 0;
+  top: 0;
+  bottom: 0;
   left: 50%;
   width: 0;
-  border-left: 0.5pt solid #cbd5e1;
+  border-left: 0.6pt solid #94a3b8;
   pointer-events: none;
+  z-index: 0;
 }
 
-.section-questions-grid.separated > .paper-q {
-  padding: 0 12px;
-}
-.section-questions-grid.separated > .paper-q:nth-child(odd) {
-  padding-left: 0;
+.section-questions-2col .q-col-left {
+  width: 50%;
   padding-right: 12px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
 }
-.section-questions-grid.separated > .paper-q:nth-child(even) {
+
+.section-questions-2col .q-col-right {
+  width: 50%;
   padding-left: 12px;
-  padding-right: 0;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
 }
 
-.section-questions-grid:not(.separated) > .paper-q {
-  padding: 0 8px;
-}
+.section-questions-2col:not(.separated) .q-col-left { padding-right: 10px; }
+.section-questions-2col:not(.separated) .q-col-right { padding-left: 10px; }
 
-.paper-q {
-  margin-bottom: 0;
+.q-col-left .paper-q,
+.q-col-right .paper-q {
+  margin-bottom: 5px;
   break-inside: avoid;
   page-break-inside: avoid;
 }
+
+.paper-q { margin-bottom: 0; }
 .q-line {
   display: flex; justify-content: space-between;
   gap: 4px; align-items: flex-start;
@@ -405,13 +389,12 @@ input:focus, select:focus, textarea:focus {
   margin: 1px 0 0 14px;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0 8px;
+  gap: 0 6px;
   font-size: 9pt;
 }
 .q-options div::before { content: attr(data-label) ") "; font-weight: bold; }
 .q-tf { margin: 1px 0 0 14px; font-size: 9pt; }
 
-/* ============ MODAL ============ */
 .modal-overlay {
   display: none; position: fixed; inset: 0;
   background: rgba(0,0,0,0.55); z-index: 1000;
@@ -488,63 +471,132 @@ input:focus, select:focus, textarea:focus {
   border: 1px solid #a7f3d0;
 }
 
-/* ============ RESPONSIVE ============ */
+/* ===================================================== */
+/* ============ MOBILE PERFECT CENTERING ============== */
+/* ===================================================== */
+
 @media (max-width: 1100px) {
   html, body { overflow: auto; height: auto; }
   .app {
     grid-template-columns: 1fr;
-    padding: 12px;
-    gap: 14px;
-    height: auto;
-    overflow: visible;
+    padding: 12px; gap: 14px;
+    height: auto; overflow: visible;
   }
   .editor-panel {
-    height: auto;
-    max-height: none;
-    overflow: visible;
+    height: auto; max-height: none; overflow: visible;
   }
-  .preview-panel {
-    height: auto;
-    overflow: visible;
-  }
-  .paper-scroll-area {
-    overflow: visible;
-    padding: 4px;
-  }
+  .preview-panel { height: auto; overflow: visible; }
 }
+
 @media (max-width: 768px) {
   .app { padding: 8px; gap: 10px; }
   .editor-panel { padding: 14px; border-radius: 10px; }
   .panel-header h1 { font-size: 1.1rem; }
-  .paper-wrapper { align-items: center; gap: 10px; padding: 0 0 10px 0; }
-  .paper-scroll-area { overflow-x: hidden; }
-  .a4-page {
-    transform: scale(0.48);
-    transform-origin: top center;
-    margin-bottom: -155mm;
+
+  .preview-panel {
+    width: 100%;
+    overflow: visible;
   }
+
+  /* Scroll area — fixed viewport height */
+  .paper-scroll-area {
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 12px 0;
+    background: #eef1f6;
+    max-height: 75vh;
+    /* Smooth scroll */
+    -webkit-overflow-scrolling: touch;
+    /* Prevent any layout leak */
+    box-sizing: border-box;
+    /* Center-align content */
+    text-align: center;
+  }
+
+  /* Wrapper — block with center text-align */
+  .paper-wrapper {
+    display: block;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+    text-align: center;
+    /* Prevent white-space collapse */
+    font-size: 0;
+  }
+
+  /* A4 PAGE — the fix */
+  .a4-page {
+    /* Use inline-block + text-align: center from parent */
+    display: inline-block;
+    /* Reset font-size after wrapper reset */
+    font-size: 11pt;
+    /* Align to top */
+    vertical-align: top;
+    /* Center horizontally after scale */
+    text-align: left;
+    /* Scale down */
+    transform: scale(0.48);
+    /* CRITICAL: origin at top center so it stays centered */
+    transform-origin: top center;
+    /* Negative bottom margin removes visual gap after scale */
+    /* 297mm * (1 - 0.48) = 154.44mm ≈ 584px */
+    margin: 0 0 -584px 0;
+    /* Ensure no auto margins fight with text-align */
+    margin-left: 0;
+    margin-right: 0;
+    /* Lighter shadow for mobile */
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+
   .preview-toolbar { padding: 10px 14px; font-size: 0.85rem; }
   .modal { max-width: 100%; border-radius: 12px; }
 }
+
 @media (max-width: 480px) {
   .app { padding: 6px; }
   .editor-panel { padding: 12px; }
+
+  .paper-scroll-area { max-height: 70vh; }
+
   .a4-page {
+    display: inline-block;
+    vertical-align: top;
+    text-align: left;
     transform: scale(0.42);
-    margin-bottom: -175mm;
+    transform-origin: top center;
+    /* 297mm * (1 - 0.42) = 172.26mm ≈ 651px */
+    margin: 0 0 -651px 0;
+    margin-left: 0;
+    margin-right: 0;
   }
+
   .add-buttons, .actions { grid-template-columns: 1fr; }
   .actions .btn-danger { grid-column: span 1; }
-  .preview-toolbar { flex-direction: column; align-items: flex-start; gap: 4px; }
-}
-@media (max-width: 380px) {
-  .a4-page {
-    transform: scale(0.36);
-    margin-bottom: -192mm;
+  .preview-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
   }
 }
 
-/* ============ PRINT ============ */
+@media (max-width: 380px) {
+  .paper-scroll-area { max-height: 65vh; }
+
+  .a4-page {
+    display: inline-block;
+    vertical-align: top;
+    text-align: left;
+    transform: scale(0.36);
+    transform-origin: top center;
+    /* 297mm * (1 - 0.36) = 190.08mm ≈ 719px */
+    margin: 0 0 -719px 0;
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
 @media print {
   html, body { overflow: visible !important; height: auto !important; background: #fff; margin: 0; padding: 0; }
   .app { display: block; padding: 0; margin: 0; gap: 0; height: auto; overflow: visible; }
@@ -554,12 +606,19 @@ input:focus, select:focus, textarea:focus {
     display: block; gap: 0; padding: 0; margin: 0;
     overflow: visible !important; height: auto !important;
     background: transparent;
+    text-align: left;
+    max-height: none;
   }
   .paper-wrapper {
-    display: block; gap: 0; padding: 0; margin: 0; overflow: visible;
+    display: block; gap: 0; padding: 0; margin: 0;
+    overflow: visible;
+    width: auto; min-width: auto;
+    text-align: left;
+    font-size: 11pt;
   }
   .a4-page {
     box-shadow: none; margin: 0;
+    display: block;
     transform: none !important;
     page-break-after: always; break-after: page;
   }
@@ -574,7 +633,7 @@ input:focus, select:focus, textarea:focus {
   <aside class="editor-panel">
     <div class="panel-header">
       <h1>📝 Exam Paper Builder</h1>
-      <p>Professional layout with optional features</p>
+      <p>Column-wise 2-column layout</p>
     </div>
 
     <section class="section collapsible">
@@ -635,7 +694,7 @@ input:focus, select:focus, textarea:focus {
           <div class="toggle-switch" id="borderToggle"></div>
         </div>
         <div class="toggle-row">
-          <span>Vertical Separator (2-Column)</span>
+          <span>Vertical Separator</span>
           <div class="toggle-switch active" id="separatorToggle"></div>
         </div>
       </div>
@@ -863,7 +922,7 @@ separatorToggle.addEventListener('click', () => {
 });
 
 /* ================= LOCALSTORAGE ================= */
-const STORAGE_KEY = 'examPaperBuilder_v11';
+const STORAGE_KEY = 'examPaperBuilder_v16';
 
 function saveData() {
   try {
@@ -1127,7 +1186,6 @@ function renderPaper() {
   paginateAndRender(blocks);
 }
 
-/* Build page header (repeated on every page) */
 function buildPageHeaderHTML(isFirstPage) {
   const school = schoolName.value.trim();
   const address = schoolAddress.value.trim();
@@ -1168,7 +1226,6 @@ function buildPageHeaderHTML(isFirstPage) {
   }
 }
 
-/* Build paper blocks */
 function buildPaperBlocks() {
   const stuLine = studentLine.value.trim();
   const instr = instructions.value.trim();
@@ -1212,13 +1269,11 @@ function buildPaperBlocks() {
         sectionName: secName
       });
 
-      secQs.forEach((q, idx) => {
+      secQs.forEach(q => {
         blocks.push({
           type: 'question',
           html: renderQuestionHTML(q, globalQNum),
-          sectionName: secName,
-          gridStart: idx === 0,
-          gridEnd: idx === secQs.length - 1
+          sectionName: secName
         });
         globalQNum++;
       });
@@ -1228,7 +1283,7 @@ function buildPaperBlocks() {
   return blocks;
 }
 
-/* ================= PAGINATION ================= */
+/* ================= PAGINATION with COLUMN-WISE SPLIT ================= */
 function paginateAndRender(blocks) {
   paperWrapper.innerHTML = '';
 
@@ -1249,48 +1304,77 @@ function paginateAndRender(blocks) {
   const MM_TO_PX = 96 / 25.4;
   const A4_MM = 297;
   const PAD_TOP_MM = 10;
-  const PAD_BOTTOM_MM = 12;
-  const FOOTER_RESERVE_MM = 8;
+  const PAD_BOTTOM_MM = 14;
+  const FOOTER_RESERVE_MM = 7;
   const HEADER_REPEAT_MM = 11;
-  const SAFETY_MM = 1;
+  const SAFETY_MM = 0.5;
   const USABLE_FIRST_PX = (A4_MM - PAD_TOP_MM - PAD_BOTTOM_MM - FOOTER_RESERVE_MM - SAFETY_MM) * MM_TO_PX;
   const USABLE_OTHER_PX = (A4_MM - PAD_TOP_MM - PAD_BOTTOM_MM - FOOTER_RESERVE_MM - HEADER_REPEAT_MM - SAFETY_MM) * MM_TO_PX;
 
-  function renderToMeasurer(list, pageIdx = 0) {
-    measurerContent.innerHTML = '';
+  function renderBlocksTo(targetEl, list, pageIdx) {
     const headerHTML = buildPageHeaderHTML(pageIdx === 0);
     if (headerHTML) {
       const htmp = document.createElement('div');
       htmp.innerHTML = headerHTML;
-      while (htmp.firstChild) measurerContent.appendChild(htmp.firstChild);
+      while (htmp.firstChild) targetEl.appendChild(htmp.firstChild);
     }
 
-    let gridOpen = false;
-    let currentGrid = null;
-    let previousSection = null;
+    let currentSectionHeading = null;
+    let currentSectionQuestions = [];
+
+    function flushSection() {
+      if (currentSectionHeading) {
+        const htmp = document.createElement('div');
+        htmp.innerHTML = currentSectionHeading.html;
+        while (htmp.firstChild) targetEl.appendChild(htmp.firstChild);
+
+        if (currentSectionQuestions.length) {
+          const container = document.createElement('div');
+          container.className = 'section-questions-2col' + (separatorEnabled ? ' separated' : '');
+
+          const leftCol = document.createElement('div');
+          leftCol.className = 'q-col-left';
+          const rightCol = document.createElement('div');
+          rightCol.className = 'q-col-right';
+
+          const total = currentSectionQuestions.length;
+          const leftCount = Math.ceil(total / 2);
+
+          currentSectionQuestions.forEach((q, idx) => {
+            const wrap = document.createElement('div');
+            wrap.innerHTML = q.html;
+            const target = idx < leftCount ? leftCol : rightCol;
+            while (wrap.firstChild) target.appendChild(wrap.firstChild);
+          });
+
+          container.appendChild(leftCol);
+          container.appendChild(rightCol);
+          targetEl.appendChild(container);
+        }
+        currentSectionHeading = null;
+        currentSectionQuestions = [];
+      }
+    }
 
     list.forEach(b => {
-      if (b.sectionName && previousSection && b.sectionName !== previousSection && gridOpen) {
-        gridOpen = false; currentGrid = null;
-      }
-      previousSection = b.sectionName || previousSection;
-
-      if (b.gridStart && !gridOpen) {
-        currentGrid = document.createElement('div');
-        currentGrid.className = 'section-questions-grid' + (separatorEnabled ? ' separated' : '');
-        measurerContent.appendChild(currentGrid);
-        gridOpen = true;
-      }
-
-      const target = (gridOpen && currentGrid) ? currentGrid : measurerContent;
-      const tmp = document.createElement('div');
-      tmp.innerHTML = b.html;
-      while (tmp.firstChild) target.appendChild(tmp.firstChild);
-
-      if (b.gridEnd && gridOpen) {
-        gridOpen = false; currentGrid = null;
+      if (b.type === 'section-heading') {
+        flushSection();
+        currentSectionHeading = b;
+      } else if (b.type === 'question') {
+        currentSectionQuestions.push(b);
+      } else {
+        flushSection();
+        const wrap = document.createElement('div');
+        wrap.innerHTML = b.html;
+        while (wrap.firstChild) targetEl.appendChild(wrap.firstChild);
       }
     });
+    flushSection();
+  }
+
+  function renderToMeasurer(list, pageIdx = 0) {
+    measurerContent.innerHTML = '';
+    renderBlocksTo(measurerContent, list, pageIdx);
     return measurerContent.scrollHeight;
   }
 
@@ -1334,39 +1418,7 @@ function paginateAndRender(blocks) {
     const content = document.createElement('div');
     content.className = 'page-content';
 
-    const headerHTML = buildPageHeaderHTML(pageIdx === 0);
-    if (headerHTML) {
-      const tmp = document.createElement('div');
-      tmp.innerHTML = headerHTML;
-      while (tmp.firstChild) content.appendChild(tmp.firstChild);
-    }
-
-    let gridOpen = false;
-    let currentGrid = null;
-    let previousSection = null;
-
-    pageBlocks.forEach(b => {
-      if (b.sectionName && previousSection && b.sectionName !== previousSection && gridOpen) {
-        gridOpen = false; currentGrid = null;
-      }
-      previousSection = b.sectionName || previousSection;
-
-      if (b.gridStart && !gridOpen) {
-        currentGrid = document.createElement('div');
-        currentGrid.className = 'section-questions-grid' + (separatorEnabled ? ' separated' : '');
-        content.appendChild(currentGrid);
-        gridOpen = true;
-      }
-
-      const target = (gridOpen && currentGrid) ? currentGrid : content;
-      const tmp = document.createElement('div');
-      tmp.innerHTML = b.html;
-      while (tmp.firstChild) target.appendChild(tmp.firstChild);
-
-      if (b.gridEnd && gridOpen) {
-        gridOpen = false; currentGrid = null;
-      }
-    });
+    renderBlocksTo(content, pageBlocks, pageIdx);
 
     page.appendChild(content);
 
@@ -1556,7 +1608,8 @@ downloadBtn.addEventListener('click', () => {
     pagebreak: {
       mode: ['css', 'legacy'],
       avoid: ['.paper-q', '.paper-header', '.paper-instructions',
-              '.section-heading', '.page-footer', '.page-watermark', '.page-header-repeat']
+              '.section-heading', '.page-footer', '.page-watermark',
+              '.page-header-repeat', '.section-questions-2col']
     }
   };
 
