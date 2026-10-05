@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exam Paper Builder - Professional</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --primary: #4f46e5; --primary-dark: #4338ca;
+  --success: #10b981; --danger: #ef4444;
+  --gray: #6b7280; --light: #f3f4f6; --border: #e5e7eb;
+  --purple: #8b5cf6; --purple-dark: #7c3aed;
+}
+html, body { overflow: hidden; height: 100%; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #eef1f6; color: #1f2937; height: 100vh;
+}
+
+/* ============ APP LAYOUT — FIXED HEIGHT, TWO SCROLLABLE PANELS ============ */
+.app {
+  display: grid;
+  grid-template-columns: 430px 1fr;
+  gap: 20px;
+  padding: 20px;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ============ EDITOR PANEL (Scrollable) ============ */
+.editor-panel {
+  background: #fff; border-radius: 14px; padding: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: #c7d2fe #f3f4f6;
+}
+.editor-panel::-webkit-scrollbar { width: 8px; }
+.editor-panel::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 8px; }
+.editor-panel::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 8px; }
+.editor-panel::-webkit-scrollbar-thumb:hover { background: #a5b4fc; }
+
+.panel-header h1 { font-size: 1.3rem; color: var(--primary); margin-bottom: 4px; }
+.panel-header p { font-size: 0.85rem; color: var(--gray); margin-bottom: 20px; }
+
+.section { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+.section h2 {
+  font-size: 0.95rem; color: #374151; margin-bottom: 12px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  display: flex; align-items: center; gap: 6px;
+}
+.form-grid { display: flex; flex-direction: column; gap: 10px; }
+.form-grid label {
+  font-size: 0.8rem; color: var(--gray); font-weight: 600;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.form-hint {
+  font-size: 0.7rem; color: #9ca3af; font-weight: 400;
+  font-style: italic; margin-top: 2px;
+}
+input, select, textarea {
+  font-family: inherit; padding: 9px 12px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 0.9rem; transition: 0.2s; width: 100%; background: #fff;
+  color: #1f2937;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+}
+
+.collapsible-header {
+  cursor: pointer; user-select: none; display: flex;
+  justify-content: space-between; align-items: center;
+}
+.collapsible-header::after {
+  content: '▾'; font-size: 0.9rem; color: var(--gray);
+  transition: 0.2s;
+}
+.collapsible.collapsed .collapsible-header::after { transform: rotate(-90deg); }
+.collapsible.collapsed .collapsible-body { display: none; }
+
+.section-manager { display: flex; flex-direction: column; gap: 8px; }
+.section-list { display: flex; flex-direction: column; gap: 6px; }
+.section-item {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--light); padding: 8px 10px;
+  border-radius: 8px; font-size: 0.85rem;
+}
+.section-item span { flex: 1; font-weight: 600; color: #374151; word-break: break-word; }
+.section-item button {
+  width: 26px; height: 26px; border: none; border-radius: 6px;
+  background: #fee2e2; color: #991b1b; cursor: pointer; font-size: 0.8rem;
+  flex-shrink: 0;
+}
+.section-item button:hover { background: #fecaca; }
+.section-add { display: flex; gap: 6px; }
+.section-add input { flex: 1; min-width: 0; }
+.section-add button {
+  padding: 0 14px; border: none; background: var(--primary);
+  color: #fff; border-radius: 8px; font-weight: 600;
+  cursor: pointer; font-size: 0.85rem; flex-shrink: 0;
+}
+.section-add button:hover { background: var(--primary-dark); }
+
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; font-size: 0.85rem; font-weight: 600; color: #374151;
+}
+.toggle-switch {
+  position: relative; width: 42px; height: 24px;
+  background: #d1d5db; border-radius: 12px;
+  cursor: pointer; transition: 0.2s; flex-shrink: 0;
+}
+.toggle-switch.active { background: var(--success); }
+.toggle-switch::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 18px; height: 18px; background: #fff;
+  border-radius: 50%; transition: 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle-switch.active::after { left: 21px; }
+
+.btn-primary, .btn-success, .btn-danger, .btn-print, .btn-secondary {
+  padding: 11px 16px; border: none; border-radius: 9px;
+  font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  transition: 0.2s; width: 100%; font-family: inherit;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-success:hover { background: #059669; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: #dc2626; }
+.btn-print { background: #0ea5e9; color: #fff; }
+.btn-print:hover { background: #0284c7; }
+.btn-secondary {
+  background: var(--light); color: #374151;
+  border: 1.5px solid var(--border);
+}
+.btn-secondary:hover { background: #e5e7eb; }
+.btn-bulk { background: var(--purple); color: #fff; }
+.btn-bulk:hover { background: var(--purple-dark); }
+
+.add-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.actions .btn-danger { grid-column: span 2; }
+
+.questions-list { display: flex; flex-direction: column; gap: 10px; }
+.empty-msg {
+  font-size: 0.85rem; color: var(--gray); text-align: center;
+  padding: 20px; background: var(--light); border-radius: 8px;
+}
+.q-item {
+  background: var(--light); padding: 12px; border-radius: 9px;
+  border-left: 4px solid var(--primary); display: flex;
+  justify-content: space-between; gap: 10px; align-items: flex-start;
+}
+.q-item-info { flex: 1; font-size: 0.85rem; min-width: 0; }
+.q-item-info strong {
+  color: var(--primary); font-size: 0.72rem;
+  text-transform: uppercase; display: flex; gap: 6px; flex-wrap: wrap;
+}
+.q-item-info .section-tag {
+  background: #ddd6fe; color: #5b21b6;
+  padding: 1px 6px; border-radius: 4px; font-size: 0.68rem;
+}
+.q-item-info p { margin: 4px 0; color: #374151; word-break: break-word; }
+.q-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.q-item-actions button {
+  width: 32px; height: 32px; border-radius: 6px;
+  border: none; cursor: pointer; font-size: 0.85rem; transition: 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.edit-q { background: #fef3c7; color: #92400e; }
+.edit-q:hover { background: #fde68a; }
+.del-q { background: #fee2e2; color: #991b1b; }
+.del-q:hover { background: #fecaca; }
+
+/* ============ PREVIEW PANEL (Scrollable) ============ */
+.preview-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.preview-toolbar {
+  background: #fff; padding: 12px 18px; border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  font-weight: 600; color: #374151; font-size: 0.9rem;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 6px;
+  flex-shrink: 0;
+}
+.page-indicator { font-size: 0.8rem; color: var(--gray); font-weight: 500; }
+
+/* Scrollable paper area */
+.paper-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 4px 4px 20px 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #c7d2fe #f3f4f6;
+  background: #eef1f6;
+  border-radius: 10px;
+}
+.paper-scroll-area::-webkit-scrollbar { width: 10px; height: 10px; }
+.paper-scroll-area::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 10px; }
+.paper-scroll-area::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 10px; }
+.paper-scroll-area::-webkit-scrollbar-thumb:hover { background: #a5b4fc; }
+
+.paper-wrapper {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 20px; padding: 10px 0 30px 0;
+  min-width: fit-content;
+}
+
+/* ============ A4 PAGE ============ */
+.a4-page {
+  width: 210mm;
+  height: 297mm;
+  background: #fff;
+  padding: 10mm 12mm 12mm 12mm;
+  box-shadow: 0 4px 25px rgba(0,0,0,0.12);
+  font-family: 'Times New Roman', Georgia, serif;
+  color: #000;
+  line-height: 1.3;
+  font-size: 11pt;
+  position: relative;
+  overflow: hidden;
+  display: block;
+  flex-shrink: 0;
+}
+
+.a4-page.has-border {
+  border: 1.5pt solid #000;
+  padding: 8mm 10mm 10mm 10mm;
+}
+
+.page-content { display: block; width: 100%; }
+
+/* Watermark */
+.page-watermark {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(-35deg);
+  font-size: 100pt;
+  font-weight: bold;
+  color: rgba(0,0,0,0.05);
+  font-family: 'Times New Roman', Georgia, serif;
+  pointer-events: none;
+  white-space: nowrap;
+  letter-spacing: 8px;
+  z-index: 0;
+  text-transform: uppercase;
+  user-select: none;
+}
+.a4-page .page-content { position: relative; z-index: 1; }
+
+/* Footer — tight at bottom */
+.page-footer {
+  position: absolute;
+  bottom: 4mm;
+  left: 12mm;
+  right: 12mm;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8pt;
+  color: #555;
+  border-top: 0.5pt solid #999;
+  padding-top: 2px;
+  font-family: 'Times New Roman', Georgia, serif;
+  z-index: 1;
+}
+.a4-page.has-border .page-footer {
+  left: 10mm;
+  right: 10mm;
+}
+.page-footer .footer-left { font-style: italic; }
+.page-footer .footer-right { font-weight: bold; }
+
+/* Repeating page header */
+.page-header-repeat {
+  text-align: center;
+  border-bottom: 1pt solid #000;
+  padding-bottom: 3px;
+  margin-bottom: 6px;
+}
+.page-header-repeat h1 {
+  font-size: 13pt; text-transform: uppercase;
+  letter-spacing: 0.5px; margin-bottom: 1px; font-weight: bold;
+}
+.page-header-repeat .header-address {
+  font-size: 8.5pt; color: #333; font-style: italic;
+}
+.page-header-repeat .header-exam {
+  font-size: 9.5pt; font-weight: bold;
+  margin-top: 1px; text-transform: uppercase;
+}
+
+/* Full header on first page */
+.paper-header {
+  text-align: center;
+  border-bottom: 2px solid #000;
+  padding-bottom: 5px;
+  margin-bottom: 6px;
+}
+.paper-header h1 {
+  font-size: 16pt; text-transform: uppercase;
+  letter-spacing: 1px; margin-bottom: 2px; line-height: 1.2; font-weight: bold;
+}
+.paper-address {
+  font-size: 9.5pt; color: #333; font-style: italic; margin-bottom: 2px;
+}
+.paper-header h2 {
+  font-size: 11pt; font-weight: bold; margin-bottom: 4px;
+  margin-top: 3px; text-transform: uppercase;
+}
+.paper-meta {
+  display: flex; justify-content: space-between; font-size: 10pt;
+  font-weight: bold; margin-top: 3px; flex-wrap: wrap; gap: 6px;
+}
+.paper-student {
+  display: flex; justify-content: space-between; font-size: 10pt;
+  margin-top: 4px; border-top: 1px dashed #555;
+  padding-top: 3px; flex-wrap: wrap; gap: 6px;
+}
+.paper-instructions {
+  background: #f9fafb; border: 1px solid #ddd;
+  padding: 4px 8px; border-radius: 3px;
+  font-size: 9pt; margin-bottom: 6px;
+}
+.paper-instructions strong { font-size: 9.5pt; }
+.paper-instructions ul { margin: 2px 0 0 14px; }
+.paper-instructions li { margin-bottom: 0; }
+
+.paper-section { margin-bottom: 8px; }
+.section-heading {
+  background: #1f2937; color: #fff; padding: 3px 10px;
+  font-weight: bold; font-size: 9.5pt; text-align: center;
+  letter-spacing: 0.5px; margin-bottom: 5px; text-transform: uppercase;
+}
+
+/* Two-column grid with vertical separator */
+.section-questions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px 0;
+  align-items: start;
+  position: relative;
+}
+
+.section-questions-grid.separated { column-gap: 0; }
+.section-questions-grid.separated::before {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 50%;
+  width: 0;
+  border-left: 0.5pt solid #cbd5e1;
+  pointer-events: none;
+}
+
+.section-questions-grid.separated > .paper-q {
+  padding: 0 12px;
+}
+.section-questions-grid.separated > .paper-q:nth-child(odd) {
+  padding-left: 0;
+  padding-right: 12px;
+}
+.section-questions-grid.separated > .paper-q:nth-child(even) {
+  padding-left: 12px;
+  padding-right: 0;
+}
+
+.section-questions-grid:not(.separated) > .paper-q {
+  padding: 0 8px;
+}
+
+.paper-q {
+  margin-bottom: 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.q-line {
+  display: flex; justify-content: space-between;
+  gap: 4px; align-items: flex-start;
+}
+.q-text {
+  flex: 1; font-weight: 500; text-align: left; word-break: break-word;
+  font-size: 9.5pt;
+}
+.q-marks { font-weight: bold; flex-shrink: 0; white-space: nowrap; font-size: 9pt; }
+.q-options {
+  margin: 1px 0 0 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 8px;
+  font-size: 9pt;
+}
+.q-options div::before { content: attr(data-label) ") "; font-weight: bold; }
+.q-tf { margin: 1px 0 0 14px; font-size: 9pt; }
+
+/* ============ MODAL ============ */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55); z-index: 1000;
+  justify-content: center; align-items: center;
+  padding: 20px; backdrop-filter: blur(3px);
+  overflow-y: auto;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: #fff; border-radius: 14px; width: 100%;
+  max-width: 560px; max-height: 92vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: slideUp 0.25s ease; margin: auto;
+}
+.modal.modal-lg { max-width: 720px; }
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: #fff; z-index: 2;
+}
+.modal-header h2 { font-size: 1.1rem; color: #1f2937; }
+.close-btn {
+  background: none; border: none; font-size: 1.6rem;
+  cursor: pointer; color: var(--gray); width: 32px; height: 32px;
+  border-radius: 50%; transition: 0.2s;
+}
+.close-btn:hover { background: var(--light); color: #000; }
+.modal-body {
+  padding: 20px; display: flex; flex-direction: column; gap: 14px;
+}
+.modal-body label {
+  font-size: 0.85rem; font-weight: 600; color: #374151;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.mcq-options {
+  background: var(--light); padding: 12px; border-radius: 9px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.options-title { font-size: 0.85rem; font-weight: 700; color: #374151; }
+.option-row { display: flex; align-items: center; gap: 8px; }
+.option-row input[type="radio"] {
+  width: 18px; height: 18px; flex-shrink: 0;
+  accent-color: var(--primary); cursor: pointer;
+}
+.modal-footer {
+  padding: 16px 20px; border-top: 1px solid var(--border);
+  display: flex; gap: 10px; justify-content: flex-end;
+  position: sticky; bottom: 0; background: #fff;
+}
+.modal-footer button { width: auto; padding: 10px 22px; }
+
+.bulk-help {
+  background: #f0f9ff; border: 1px solid #bae6fd;
+  padding: 10px 12px; border-radius: 8px;
+  font-size: 0.82rem; color: #075985; line-height: 1.5;
+}
+.bulk-help pre {
+  background: #fff; padding: 8px 10px; border-radius: 6px;
+  margin-top: 6px; font-size: 0.72rem; overflow-x: auto;
+  border: 1px solid #bae6fd; font-family: monospace; line-height: 1.4;
+  white-space: pre;
+}
+#bulkTextarea {
+  font-family: 'Consolas', monospace; font-size: 0.82rem;
+  min-height: 200px; line-height: 1.5;
+}
+.bulk-stats {
+  font-size: 0.82rem; color: #059669; font-weight: 600;
+  background: #ecfdf5; padding: 8px 12px; border-radius: 8px;
+  border: 1px solid #a7f3d0;
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 1100px) {
+  html, body { overflow: auto; height: auto; }
+  .app {
+    grid-template-columns: 1fr;
+    padding: 12px;
+    gap: 14px;
+    height: auto;
+    overflow: visible;
+  }
+  .editor-panel {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+  .preview-panel {
+    height: auto;
+    overflow: visible;
+  }
+  .paper-scroll-area {
+    overflow: visible;
+    padding: 4px;
+  }
+}
+@media (max-width: 768px) {
+  .app { padding: 8px; gap: 10px; }
+  .editor-panel { padding: 14px; border-radius: 10px; }
+  .panel-header h1 { font-size: 1.1rem; }
+  .paper-wrapper { align-items: center; gap: 10px; padding: 0 0 10px 0; }
+  .paper-scroll-area { overflow-x: hidden; }
+  .a4-page {
+    transform: scale(0.48);
+    transform-origin: top center;
+    margin-bottom: -155mm;
+  }
+  .preview-toolbar { padding: 10px 14px; font-size: 0.85rem; }
+  .modal { max-width: 100%; border-radius: 12px; }
+}
+@media (max-width: 480px) {
+  .app { padding: 6px; }
+  .editor-panel { padding: 12px; }
+  .a4-page {
+    transform: scale(0.42);
+    margin-bottom: -175mm;
+  }
+  .add-buttons, .actions { grid-template-columns: 1fr; }
+  .actions .btn-danger { grid-column: span 1; }
+  .preview-toolbar { flex-direction: column; align-items: flex-start; gap: 4px; }
+}
+@media (max-width: 380px) {
+  .a4-page {
+    transform: scale(0.36);
+    margin-bottom: -192mm;
+  }
+}
+
+/* ============ PRINT ============ */
+@media print {
+  html, body { overflow: visible !important; height: auto !important; background: #fff; margin: 0; padding: 0; }
+  .app { display: block; padding: 0; margin: 0; gap: 0; height: auto; overflow: visible; }
+  .editor-panel, .preview-toolbar { display: none !important; }
+  .preview-panel { display: block; padding: 0; margin: 0; gap: 0; height: auto; overflow: visible; }
+  .paper-scroll-area {
+    display: block; gap: 0; padding: 0; margin: 0;
+    overflow: visible !important; height: auto !important;
+    background: transparent;
+  }
+  .paper-wrapper {
+    display: block; gap: 0; padding: 0; margin: 0; overflow: visible;
+  }
+  .a4-page {
+    box-shadow: none; margin: 0;
+    transform: none !important;
+    page-break-after: always; break-after: page;
+  }
+  .a4-page:last-child { page-break-after: avoid; break-after: avoid; }
+  @page { size: A4; margin: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="editor-panel">
+    <div class="panel-header">
+      <h1>📝 Exam Paper Builder</h1>
+      <p>Professional layout with optional features</p>
+    </div>
+
+    <section class="section collapsible">
+      <h2 class="collapsible-header">📋 Paper Details</h2>
+      <div class="form-grid collapsible-body">
+        <label>School / Institute Name
+          <input type="text" id="schoolName" placeholder="e.g. Delhi Public School">
+        </label>
+        <label>School Address
+          <input type="text" id="schoolAddress" placeholder="e.g. Sector 45, New Delhi">
+        </label>
+        <label>Exam Name
+          <input type="text" id="examName" placeholder="e.g. Half Yearly Exam 2025">
+        </label>
+        <label>Class
+          <input type="text" id="className" placeholder="e.g. Class X">
+        </label>
+        <label>Subject
+          <input type="text" id="subjectName" placeholder="e.g. Mathematics">
+        </label>
+        <label>Time Duration
+          <input type="text" id="timeDuration" placeholder="e.g. 3 Hours">
+        </label>
+        <label>Maximum Marks
+          <input type="text" id="maxMarks" placeholder="e.g. 100">
+        </label>
+        <label>Roll No. / Student Line
+          <input type="text" id="studentLine" placeholder="e.g. Name: ______ Roll No: ______">
+          <span class="form-hint">Header के नीचे student info line के लिए</span>
+        </label>
+        <label>General Instructions (comma separated)
+          <input type="text" id="instructions" placeholder="All questions are compulsory., Write neatly.">
+        </label>
+      </div>
+    </section>
+
+    <section class="section collapsible collapsed">
+      <h2 class="collapsible-header">💧 Watermark</h2>
+      <div class="collapsible-body">
+        <div class="toggle-row">
+          <span>Show Watermark</span>
+          <div class="toggle-switch" id="watermarkToggle"></div>
+        </div>
+        <div style="margin-top: 10px;">
+          <label style="font-size:0.8rem;color:var(--gray);font-weight:600;display:flex;flex-direction:column;gap:4px;">
+            Watermark Text
+            <input type="text" id="watermarkText" placeholder="e.g. DPS / CONFIDENTIAL" value="SAMPLE">
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="section collapsible collapsed">
+      <h2 class="collapsible-header">🎨 Design Options</h2>
+      <div class="collapsible-body">
+        <div class="toggle-row">
+          <span>Outer Border on Page</span>
+          <div class="toggle-switch" id="borderToggle"></div>
+        </div>
+        <div class="toggle-row">
+          <span>Vertical Separator (2-Column)</span>
+          <div class="toggle-switch active" id="separatorToggle"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section collapsible">
+      <h2 class="collapsible-header">📑 Sections</h2>
+      <div class="section-manager collapsible-body">
+        <div class="section-list" id="sectionList"></div>
+        <div class="section-add">
+          <input type="text" id="newSectionInput" placeholder="e.g. Section A - MCQ">
+          <button id="addSectionBtn">+ Add</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="add-buttons">
+      <button class="btn-primary" id="addQuestionBtn">➕ Add</button>
+      <button class="btn-bulk" id="bulkAddBtn">📦 Bulk Add</button>
+    </div>
+
+    <section class="section">
+      <h2>❓ Questions (<span id="qCount">0</span>)</h2>
+      <div id="questionsList" class="questions-list">
+        <p class="empty-msg">No questions yet. Click "Add" or "Bulk Add" to start.</p>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button class="btn-success" id="downloadBtn">⬇️ Download PDF</button>
+      <button class="btn-print" id="printBtn">🖨️ Print</button>
+      <button class="btn-danger" id="clearAllBtn">🗑️ Clear All</button>
+    </div>
+  </aside>
+
+  <main class="preview-panel">
+    <div class="preview-toolbar">
+      <span>👁️ Live Preview (A4 Size)</span>
+      <span class="page-indicator" id="pageIndicator">0 pages</span>
+    </div>
+    <div class="paper-scroll-area" id="paperScrollArea">
+      <div class="paper-wrapper" id="paperWrapper"></div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL: Single Question -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Add Question</h2>
+      <button class="close-btn" id="closeModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <label>Section
+        <select id="qSection"></select>
+      </label>
+      <label>Question Type
+        <select id="qType">
+          <option value="mcq">Multiple Choice (MCQ)</option>
+          <option value="short">Short Answer</option>
+          <option value="long">Long Answer</option>
+          <option value="tf">True / False</option>
+          <option value="fill">Fill in the Blanks</option>
+        </select>
+      </label>
+      <label>Question Text
+        <textarea id="qText" rows="3" placeholder="Type your question here..."></textarea>
+      </label>
+      <label>Marks
+        <input type="number" id="qMarks" value="1" min="1">
+      </label>
+      <div id="mcqOptions" class="mcq-options">
+        <p class="options-title">Options (khali chhodo to show nahi hoga):</p>
+        <div class="option-row">
+          <input type="radio" name="correctOpt" value="0">
+          <input type="text" class="opt-input" placeholder="Option A (optional)" data-idx="0">
+        </div>
+        <div class="option-row">
+          <input type="radio" name="correctOpt" value="1">
+          <input type="text" class="opt-input" placeholder="Option B (optional)" data-idx="1">
+        </div>
+        <div class="option-row">
+          <input type="radio" name="correctOpt" value="2">
+          <input type="text" class="opt-input" placeholder="Option C (optional)" data-idx="2">
+        </div>
+        <div class="option-row">
+          <input type="radio" name="correctOpt" value="3">
+          <input type="text" class="opt-input" placeholder="Option D (optional)" data-idx="3">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="cancelBtn">Cancel</button>
+      <button class="btn-primary" id="saveQBtn">Save Question</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Bulk Add -->
+<div class="modal-overlay" id="bulkOverlay">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2>📦 Bulk Add Questions</h2>
+      <button class="close-btn" id="closeBulk">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="bulk-help">
+        <strong>Format (har line ek question):</strong>
+        <pre># Section A - MCQ
+MCQ | marks | question | optA | optB | optC | optD | correctIndex(1-4)
+SHORT | marks | question
+LONG | marks | question
+TF | marks | question | T/F
+FILL | marks | question</pre>
+        <strong>Example:</strong>
+        <pre># Section A
+MCQ | 2 | What is 2+2? | 3 | 4 | 5 | 6 | 2
+MCQ | 1 | Capital of India? | Mumbai | Delhi | Kolkata | Chennai | 2
+
+# Section B
+SHORT | 3 | Define photosynthesis.
+LONG | 5 | Explain Newton's laws of motion.
+TF | 1 | Sun rises in the east. | T
+FILL | 1 | The capital of France is ______.</pre>
+      </div>
+      <label>Paste your questions here
+        <textarea id="bulkTextarea" placeholder="Paste bulk questions here..."></textarea>
+      </label>
+      <div class="bulk-stats" id="bulkStats" style="display:none;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="cancelBulk">Cancel</button>
+      <button class="btn-bulk" id="importBulkBtn" style="width:auto;padding:10px 22px;">📥 Import All</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= STATE ================= */
+let questions = [];
+let sections = [];
+let editingId = null;
+let qIdCounter = 1;
+let watermarkEnabled = false;
+let borderEnabled = false;
+let separatorEnabled = true;
+
+const $ = (id) => document.getElementById(id);
+
+const schoolName = $('schoolName');
+const schoolAddress = $('schoolAddress');
+const examName = $('examName');
+const className = $('className');
+const subjectName = $('subjectName');
+const timeDuration = $('timeDuration');
+const maxMarks = $('maxMarks');
+const studentLine = $('studentLine');
+const instructions = $('instructions');
+
+const watermarkToggle = $('watermarkToggle');
+const watermarkText = $('watermarkText');
+const borderToggle = $('borderToggle');
+const separatorToggle = $('separatorToggle');
+
+const sectionList = $('sectionList');
+const newSectionInput = $('newSectionInput');
+const addSectionBtn = $('addSectionBtn');
+
+const addQuestionBtn = $('addQuestionBtn');
+const bulkAddBtn = $('bulkAddBtn');
+const questionsList = $('questionsList');
+const qCount = $('qCount');
+const paperWrapper = $('paperWrapper');
+const pageIndicator = $('pageIndicator');
+
+const modalOverlay = $('modalOverlay');
+const modalTitle = $('modalTitle');
+const closeModal = $('closeModal');
+const cancelBtn = $('cancelBtn');
+const saveQBtn = $('saveQBtn');
+
+const qSection = $('qSection');
+const qType = $('qType');
+const qText = $('qText');
+const qMarks = $('qMarks');
+const mcqOptions = $('mcqOptions');
+
+const bulkOverlay = $('bulkOverlay');
+const closeBulk = $('closeBulk');
+const cancelBulk = $('cancelBulk');
+const importBulkBtn = $('importBulkBtn');
+const bulkTextarea = $('bulkTextarea');
+const bulkStats = $('bulkStats');
+
+const downloadBtn = $('downloadBtn');
+const printBtn = $('printBtn');
+const clearAllBtn = $('clearAllBtn');
+
+/* ================= COLLAPSIBLE ================= */
+document.querySelectorAll('.collapsible-header').forEach(header => {
+  header.addEventListener('click', () => {
+    header.closest('.collapsible').classList.toggle('collapsed');
+  });
+});
+
+/* ================= TOGGLES ================= */
+watermarkToggle.addEventListener('click', () => {
+  watermarkEnabled = !watermarkEnabled;
+  watermarkToggle.classList.toggle('active', watermarkEnabled);
+  renderPaper(); saveData();
+});
+watermarkText.addEventListener('input', () => { renderPaper(); saveData(); });
+
+borderToggle.addEventListener('click', () => {
+  borderEnabled = !borderEnabled;
+  borderToggle.classList.toggle('active', borderEnabled);
+  renderPaper(); saveData();
+});
+
+separatorToggle.addEventListener('click', () => {
+  separatorEnabled = !separatorEnabled;
+  separatorToggle.classList.toggle('active', separatorEnabled);
+  renderPaper(); saveData();
+});
+
+/* ================= LOCALSTORAGE ================= */
+const STORAGE_KEY = 'examPaperBuilder_v11';
+
+function saveData() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      header: {
+        schoolName: schoolName.value,
+        schoolAddress: schoolAddress.value,
+        examName: examName.value,
+        className: className.value,
+        subjectName: subjectName.value,
+        timeDuration: timeDuration.value,
+        maxMarks: maxMarks.value,
+        studentLine: studentLine.value,
+        instructions: instructions.value,
+      },
+      options: { watermarkEnabled, watermarkText: watermarkText.value, borderEnabled, separatorEnabled },
+      sections, questions, qIdCounter
+    }));
+  } catch(e) {}
+}
+
+function loadData() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) {
+    sections = ['Section A'];
+    renderSectionList();
+    updateSectionDropdown();
+    return;
+  }
+  try {
+    const data = JSON.parse(raw);
+    if (data.header) {
+      Object.entries(data.header).forEach(([key, val]) => {
+        const el = $(key);
+        if (el) el.value = val || '';
+      });
+    }
+    if (data.options) {
+      watermarkEnabled = !!data.options.watermarkEnabled;
+      watermarkText.value = data.options.watermarkText || 'SAMPLE';
+      watermarkToggle.classList.toggle('active', watermarkEnabled);
+      borderEnabled = !!data.options.borderEnabled;
+      borderToggle.classList.toggle('active', borderEnabled);
+      separatorEnabled = data.options.separatorEnabled !== false;
+      separatorToggle.classList.toggle('active', separatorEnabled);
+    }
+    sections = Array.isArray(data.sections) && data.sections.length ? data.sections : ['Section A'];
+    if (Array.isArray(data.questions)) questions = data.questions;
+    qIdCounter = typeof data.qIdCounter === 'number' ? data.qIdCounter : (questions.length + 1);
+    renderSectionList();
+    updateSectionDropdown();
+  } catch (e) { console.error(e); }
+}
+
+/* ================= HEADER LISTENERS ================= */
+[schoolName, schoolAddress, examName, className, subjectName, timeDuration, maxMarks, studentLine, instructions]
+  .forEach(el => el.addEventListener('input', () => {
+    renderPaper(); saveData();
+  }));
+
+/* ================= SECTIONS ================= */
+function renderSectionList() {
+  if (!sections.length) {
+    sectionList.innerHTML = '<p style="font-size:0.8rem;color:#9ca3af;text-align:center;padding:6px;">No sections.</p>';
+    return;
+  }
+  sectionList.innerHTML = sections.map((s, i) => `
+    <div class="section-item">
+      <span>${escapeHtml(s)}</span>
+      <button data-idx="${i}" title="Delete">🗑️</button>
+    </div>
+  `).join('');
+
+  sectionList.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.idx);
+      const sectionName = sections[idx];
+      const used = questions.some(q => q.section === sectionName);
+      if (used) { alert('This section has questions. Delete them first.'); return; }
+      if (!confirm(`Delete "${sectionName}"?`)) return;
+      sections.splice(idx, 1);
+      renderSectionList();
+      updateSectionDropdown();
+      renderPaper(); saveData();
+    });
+  });
+}
+
+function updateSectionDropdown() {
+  if (!sections.length) {
+    qSection.innerHTML = '<option value="">-- No sections --</option>';
+    return;
+  }
+  qSection.innerHTML = sections.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+}
+
+addSectionBtn.addEventListener('click', () => {
+  const val = newSectionInput.value.trim();
+  if (!val) { alert('Enter section name!'); return; }
+  if (sections.includes(val)) { alert('Section already exists!'); return; }
+  sections.push(val);
+  newSectionInput.value = '';
+  renderSectionList();
+  updateSectionDropdown();
+  renderPaper(); saveData();
+});
+
+newSectionInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') addSectionBtn.click();
+});
+
+/* ================= MODAL ================= */
+function openModal(isEdit = false, q = null) {
+  modalOverlay.classList.add('active');
+  updateSectionDropdown();
+
+  if (isEdit && q) {
+    modalTitle.textContent = 'Edit Question';
+    editingId = q.id;
+    qSection.value = q.section || (sections[0] || '');
+    qType.value = q.type;
+    qText.value = q.text;
+    qMarks.value = q.marks;
+
+    document.querySelectorAll('.opt-input').forEach(inp => inp.value = '');
+    document.querySelectorAll('input[name="correctOpt"]').forEach(r => r.checked = false);
+
+    if (q.type === 'mcq' && q.options) {
+      q.options.forEach((opt, i) => {
+        const inp = document.querySelector(`.opt-input[data-idx="${i}"]`);
+        if (inp) inp.value = opt || '';
+      });
+      if (q.correct !== null && q.correct !== undefined) {
+        const correctRadio = document.querySelector(`input[name="correctOpt"][value="${q.correct}"]`);
+        if (correctRadio) correctRadio.checked = true;
+      }
+    }
+  } else {
+    modalTitle.textContent = 'Add Question';
+    editingId = null;
+    qSection.value = sections[0] || '';
+    qType.value = 'mcq';
+    qText.value = '';
+    qMarks.value = 1;
+    document.querySelectorAll('.opt-input').forEach(inp => inp.value = '');
+    document.querySelectorAll('input[name="correctOpt"]').forEach(r => r.checked = false);
+  }
+  toggleMcqOptions();
+  setTimeout(() => qText.focus(), 100);
+}
+
+function closeModalFn() {
+  modalOverlay.classList.remove('active');
+  editingId = null;
+}
+
+function toggleMcqOptions() {
+  mcqOptions.style.display = qType.value === 'mcq' ? 'flex' : 'none';
+}
+
+addQuestionBtn.addEventListener('click', () => {
+  if (!sections.length) { alert('Please add at least one section first!'); return; }
+  openModal(false);
+});
+closeModal.addEventListener('click', closeModalFn);
+cancelBtn.addEventListener('click', closeModalFn);
+modalOverlay.addEventListener('click', (e) => {
+  if (e.target === modalOverlay) closeModalFn();
+});
+qType.addEventListener('change', toggleMcqOptions);
+
+/* ================= SAVE QUESTION ================= */
+saveQBtn.addEventListener('click', () => {
+  const text = qText.value.trim();
+  if (!text) { alert('Please enter question text!'); return; }
+
+  const section = qSection.value;
+  const marks = parseInt(qMarks.value) || 1;
+  const type = qType.value;
+
+  let options = null, correct = null;
+
+  if (type === 'mcq') {
+    const rawOptions = [...document.querySelectorAll('.opt-input')].map(i => i.value.trim());
+    const filled = rawOptions.filter(o => o !== '');
+    if (filled.length === 0) { options = null; correct = null; }
+    else if (filled.length < 2) { alert('Please fill at least 2 options!'); return; }
+    else {
+      options = rawOptions;
+      const checked = document.querySelector('input[name="correctOpt"]:checked');
+      correct = checked ? parseInt(checked.value) : null;
+    }
+  }
+
+  if (editingId !== null) {
+    const idx = questions.findIndex(q => String(q.id) === String(editingId));
+    if (idx === -1) { alert('Question not found!'); closeModalFn(); return; }
+    questions[idx] = { ...questions[idx], section, type, text, marks, options, correct };
+  } else {
+    questions.push({ id: 'q_' + (qIdCounter++), section, type, text, marks, options, correct });
+  }
+
+  closeModalFn();
+  renderQuestionsList();
+  renderPaper(); saveData();
+});
+
+/* ================= DELETE ================= */
+function deleteQuestion(id) {
+  if (!confirm('Delete this question?')) return;
+  questions = questions.filter(q => String(q.id) !== String(id));
+  renderQuestionsList();
+  renderPaper(); saveData();
+}
+
+/* ================= RENDER QUESTION LIST ================= */
+function renderQuestionsList() {
+  qCount.textContent = questions.length;
+
+  if (questions.length === 0) {
+    questionsList.innerHTML = '<p class="empty-msg">No questions yet.</p>';
+    return;
+  }
+
+  questionsList.innerHTML = questions.map((q, i) => `
+    <div class="q-item">
+      <div class="q-item-info">
+        <strong>
+          <span class="section-tag">${escapeHtml(q.section || '-')}</span>
+          Q${i + 1} • ${q.type.toUpperCase()} • ${q.marks} mark${q.marks > 1 ? 's' : ''}
+        </strong>
+        <p>${escapeHtml(q.text)}</p>
+      </div>
+      <div class="q-item-actions">
+        <button class="edit-q" data-id="${escapeHtml(String(q.id))}" title="Edit">✏️</button>
+        <button class="del-q" data-id="${escapeHtml(String(q.id))}" title="Delete">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+
+  questionsList.querySelectorAll('.edit-q').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute('data-id');
+      const q = questions.find(x => String(x.id) === String(id));
+      if (q) openModal(true, q);
+    });
+  });
+  questionsList.querySelectorAll('.del-q').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteQuestion(btn.getAttribute('data-id'));
+    });
+  });
+}
+
+/* ================= RENDER PAPER ================= */
+function renderPaper() {
+  const blocks = buildPaperBlocks();
+  paginateAndRender(blocks);
+}
+
+/* Build page header (repeated on every page) */
+function buildPageHeaderHTML(isFirstPage) {
+  const school = schoolName.value.trim();
+  const address = schoolAddress.value.trim();
+  const exam = examName.value.trim();
+  const cls = className.value.trim();
+  const subj = subjectName.value.trim();
+  const time = timeDuration.value.trim();
+  const marks = maxMarks.value.trim();
+
+  if (isFirstPage) {
+    if (!school && !address && !exam && !cls && !subj && !time && !marks) return '';
+    let h = `<div class="paper-header">`;
+    if (school) h += `<h1>${escapeHtml(school)}</h1>`;
+    if (address) h += `<div class="paper-address">${escapeHtml(address)}</div>`;
+    if (exam) h += `<h2>${escapeHtml(exam)}</h2>`;
+    if (cls || subj) {
+      h += `<div class="paper-meta">`;
+      if (cls) h += `<span>Class: ${escapeHtml(cls)}</span>`;
+      if (subj) h += `<span>Subject: ${escapeHtml(subj)}</span>`;
+      h += `</div>`;
+    }
+    if (time || marks) {
+      h += `<div class="paper-meta">`;
+      if (time) h += `<span>Time: ${escapeHtml(time)}</span>`;
+      if (marks) h += `<span>Max Marks: ${escapeHtml(marks)}</span>`;
+      h += `</div>`;
+    }
+    h += `</div>`;
+    return h;
+  } else {
+    if (!school && !address && !exam) return '';
+    let h = `<div class="page-header-repeat">`;
+    if (school) h += `<h1>${escapeHtml(school)}</h1>`;
+    if (address) h += `<div class="header-address">${escapeHtml(address)}</div>`;
+    if (exam) h += `<div class="header-exam">${escapeHtml(exam)}</div>`;
+    h += `</div>`;
+    return h;
+  }
+}
+
+/* Build paper blocks */
+function buildPaperBlocks() {
+  const stuLine = studentLine.value.trim();
+  const instr = instructions.value.trim();
+  const instrList = instr ? instr.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+  const blocks = [];
+
+  if (stuLine) {
+    blocks.push({ type: 'student-line', html: `<div class="paper-student"><span>${escapeHtml(stuLine)}</span></div>` });
+  }
+
+  if (instrList.length) {
+    blocks.push({
+      type: 'instructions',
+      html: `<div class="paper-instructions">
+        <strong>General Instructions:</strong>
+        <ul>${instrList.map(i => `<li>${escapeHtml(i)}</li>`).join('')}</ul>
+      </div>`
+    });
+  }
+
+  if (questions.length === 0) {
+    blocks.push({
+      type: 'empty',
+      html: `<p style="text-align:center;color:#999;margin-top:40px;font-style:italic;">No questions added yet.</p>`
+    });
+  } else {
+    let globalQNum = 1;
+    const orderedSections = [...sections];
+    questions.forEach(q => {
+      if (q.section && !orderedSections.includes(q.section)) orderedSections.push(q.section);
+    });
+
+    orderedSections.forEach(secName => {
+      const secQs = questions.filter(q => q.section === secName);
+      if (!secQs.length) return;
+
+      blocks.push({
+        type: 'section-heading',
+        html: `<div class="section-heading">${escapeHtml(secName)}</div>`,
+        sectionName: secName
+      });
+
+      secQs.forEach((q, idx) => {
+        blocks.push({
+          type: 'question',
+          html: renderQuestionHTML(q, globalQNum),
+          sectionName: secName,
+          gridStart: idx === 0,
+          gridEnd: idx === secQs.length - 1
+        });
+        globalQNum++;
+      });
+    });
+  }
+
+  return blocks;
+}
+
+/* ================= PAGINATION ================= */
+function paginateAndRender(blocks) {
+  paperWrapper.innerHTML = '';
+
+  const measurer = document.createElement('div');
+  measurer.className = 'a4-page';
+  measurer.style.cssText = `
+    position: absolute; visibility: hidden;
+    top: -99999px; left: -99999px;
+    pointer-events: none;
+    height: auto; min-height: 0; overflow: visible;
+  `;
+  const measurerContent = document.createElement('div');
+  measurerContent.className = 'page-content';
+  measurerContent.style.cssText = 'overflow: visible; display: block; height: auto; min-height: 0; padding: 0;';
+  measurer.appendChild(measurerContent);
+  document.body.appendChild(measurer);
+
+  const MM_TO_PX = 96 / 25.4;
+  const A4_MM = 297;
+  const PAD_TOP_MM = 10;
+  const PAD_BOTTOM_MM = 12;
+  const FOOTER_RESERVE_MM = 8;
+  const HEADER_REPEAT_MM = 11;
+  const SAFETY_MM = 1;
+  const USABLE_FIRST_PX = (A4_MM - PAD_TOP_MM - PAD_BOTTOM_MM - FOOTER_RESERVE_MM - SAFETY_MM) * MM_TO_PX;
+  const USABLE_OTHER_PX = (A4_MM - PAD_TOP_MM - PAD_BOTTOM_MM - FOOTER_RESERVE_MM - HEADER_REPEAT_MM - SAFETY_MM) * MM_TO_PX;
+
+  function renderToMeasurer(list, pageIdx = 0) {
+    measurerContent.innerHTML = '';
+    const headerHTML = buildPageHeaderHTML(pageIdx === 0);
+    if (headerHTML) {
+      const htmp = document.createElement('div');
+      htmp.innerHTML = headerHTML;
+      while (htmp.firstChild) measurerContent.appendChild(htmp.firstChild);
+    }
+
+    let gridOpen = false;
+    let currentGrid = null;
+    let previousSection = null;
+
+    list.forEach(b => {
+      if (b.sectionName && previousSection && b.sectionName !== previousSection && gridOpen) {
+        gridOpen = false; currentGrid = null;
+      }
+      previousSection = b.sectionName || previousSection;
+
+      if (b.gridStart && !gridOpen) {
+        currentGrid = document.createElement('div');
+        currentGrid.className = 'section-questions-grid' + (separatorEnabled ? ' separated' : '');
+        measurerContent.appendChild(currentGrid);
+        gridOpen = true;
+      }
+
+      const target = (gridOpen && currentGrid) ? currentGrid : measurerContent;
+      const tmp = document.createElement('div');
+      tmp.innerHTML = b.html;
+      while (tmp.firstChild) target.appendChild(tmp.firstChild);
+
+      if (b.gridEnd && gridOpen) {
+        gridOpen = false; currentGrid = null;
+      }
+    });
+    return measurerContent.scrollHeight;
+  }
+
+  const pages = [];
+  let currentPage = [];
+
+  for (let i = 0; i < blocks.length; i++) {
+    const test = [...currentPage, blocks[i]];
+    const isFirst = pages.length === 0;
+    const usable = isFirst ? USABLE_FIRST_PX : USABLE_OTHER_PX;
+    const h = renderToMeasurer(test, pages.length);
+    if (h > usable && currentPage.length > 0) {
+      pages.push(currentPage);
+      currentPage = [blocks[i]];
+    } else {
+      currentPage = test;
+    }
+  }
+  if (currentPage.length) pages.push(currentPage);
+  if (!pages.length) pages.push([]);
+
+  document.body.removeChild(measurer);
+
+  const total = pages.length;
+  const schoolLabel = schoolName.value.trim();
+  const wmEnabled = watermarkEnabled && watermarkText.value.trim();
+  const wmText = watermarkText.value.trim();
+
+  pages.forEach((pageBlocks, pageIdx) => {
+    const page = document.createElement('div');
+    page.className = 'a4-page';
+    if (borderEnabled) page.classList.add('has-border');
+
+    if (wmEnabled) {
+      const wm = document.createElement('div');
+      wm.className = 'page-watermark';
+      wm.textContent = wmText;
+      page.appendChild(wm);
+    }
+
+    const content = document.createElement('div');
+    content.className = 'page-content';
+
+    const headerHTML = buildPageHeaderHTML(pageIdx === 0);
+    if (headerHTML) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = headerHTML;
+      while (tmp.firstChild) content.appendChild(tmp.firstChild);
+    }
+
+    let gridOpen = false;
+    let currentGrid = null;
+    let previousSection = null;
+
+    pageBlocks.forEach(b => {
+      if (b.sectionName && previousSection && b.sectionName !== previousSection && gridOpen) {
+        gridOpen = false; currentGrid = null;
+      }
+      previousSection = b.sectionName || previousSection;
+
+      if (b.gridStart && !gridOpen) {
+        currentGrid = document.createElement('div');
+        currentGrid.className = 'section-questions-grid' + (separatorEnabled ? ' separated' : '');
+        content.appendChild(currentGrid);
+        gridOpen = true;
+      }
+
+      const target = (gridOpen && currentGrid) ? currentGrid : content;
+      const tmp = document.createElement('div');
+      tmp.innerHTML = b.html;
+      while (tmp.firstChild) target.appendChild(tmp.firstChild);
+
+      if (b.gridEnd && gridOpen) {
+        gridOpen = false; currentGrid = null;
+      }
+    });
+
+    page.appendChild(content);
+
+    const footer = document.createElement('div');
+    footer.className = 'page-footer';
+    footer.innerHTML = `
+      <span class="footer-left">${escapeHtml(schoolLabel)}</span>
+      <span class="footer-right">Page ${pageIdx + 1} of ${total}</span>
+    `;
+    page.appendChild(footer);
+
+    paperWrapper.appendChild(page);
+  });
+
+  updatePageIndicator(total);
+}
+
+function updatePageIndicator(n) {
+  pageIndicator.textContent = n + (n === 1 ? ' page' : ' pages');
+}
+
+/* ================= RENDER SINGLE QUESTION ================= */
+function renderQuestionHTML(q, num) {
+  const marksLabel = `[${q.marks}]`;
+  let html = `<div class="paper-q">
+    <div class="q-line">
+      <div class="q-text">Q${num}. ${escapeHtml(q.text)}</div>
+      <div class="q-marks">${marksLabel}</div>
+    </div>`;
+
+  if (q.type === 'mcq' && q.options && q.options.length) {
+    const validOptions = q.options
+      .map((opt, i) => ({ opt: (opt || '').trim(), idx: i }))
+      .filter(o => o.opt !== '');
+    if (validOptions.length > 0) {
+      html += `<div class="q-options">`;
+      validOptions.forEach(o => {
+        const label = String.fromCharCode(65 + o.idx);
+        html += `<div data-label="${label}">${escapeHtml(o.opt)}</div>`;
+      });
+      html += `</div>`;
+    }
+  } else if (q.type === 'tf') {
+    html += `<div class="q-tf">(a) True &nbsp;&nbsp;&nbsp; (b) False</div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+/* ================= UTILS ================= */
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/* ================= BULK ADD ================= */
+bulkAddBtn.addEventListener('click', () => {
+  bulkOverlay.classList.add('active');
+  bulkTextarea.value = '';
+  bulkStats.style.display = 'none';
+  setTimeout(() => bulkTextarea.focus(), 100);
+});
+closeBulk.addEventListener('click', () => bulkOverlay.classList.remove('active'));
+cancelBulk.addEventListener('click', () => bulkOverlay.classList.remove('active'));
+bulkOverlay.addEventListener('click', (e) => {
+  if (e.target === bulkOverlay) bulkOverlay.classList.remove('active');
+});
+
+bulkTextarea.addEventListener('input', () => {
+  const parsed = parseBulk(bulkTextarea.value);
+  if (parsed.error) {
+    bulkStats.style.display = 'block';
+    bulkStats.style.background = '#fef2f2';
+    bulkStats.style.color = '#991b1b';
+    bulkStats.style.borderColor = '#fecaca';
+    bulkStats.textContent = '⚠️ ' + parsed.error;
+  } else if (parsed.questions.length > 0) {
+    bulkStats.style.display = 'block';
+    bulkStats.style.background = '#ecfdf5';
+    bulkStats.style.color = '#059669';
+    bulkStats.style.borderColor = '#a7f3d0';
+    bulkStats.textContent = `✅ ${parsed.questions.length} questions ready (${parsed.sections.length} section${parsed.sections.length > 1 ? 's' : ''})`;
+  } else {
+    bulkStats.style.display = 'none';
+  }
+});
+
+function parseBulk(text) {
+  const result = { questions: [], sections: [], error: null };
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l !== '');
+  if (!lines.length) return result;
+
+  let currentSection = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.startsWith('#')) {
+      const secName = line.replace(/^#+\s*/, '').trim();
+      if (secName) {
+        currentSection = secName;
+        if (!result.sections.includes(secName)) result.sections.push(secName);
+      }
+      continue;
+    }
+
+    const parts = line.split('|').map(p => p.trim());
+    const type = parts[0].toUpperCase();
+    const section = currentSection || (result.sections[0] || 'Section A');
+    if (!result.sections.includes(section)) result.sections.push(section);
+
+    if (type === 'MCQ') {
+      if (parts.length < 4) { result.error = `Line ${i + 1}: MCQ needs marks + question + options`; return result; }
+      const marks = parseInt(parts[1]) || 1;
+      const question = parts[2];
+      if (!question) { result.error = `Line ${i + 1}: MCQ question missing`; return result; }
+      const rawOpts = parts.slice(3, 7);
+      const correctIdx = parts[7] !== undefined ? (parseInt(parts[7]) - 1) : null;
+      while (rawOpts.length < 4) rawOpts.push('');
+      result.questions.push({
+        section, type: 'mcq', text: question, marks,
+        options: rawOpts,
+        correct: (correctIdx !== null && correctIdx >= 0 && correctIdx <= 3) ? correctIdx : null
+      });
+    } else if (type === 'SHORT' || type === 'LONG' || type === 'FILL') {
+      if (parts.length < 3) { result.error = `Line ${i + 1}: ${type} needs marks + question`; return result; }
+      result.questions.push({
+        section, type: type.toLowerCase(), text: parts[2],
+        marks: parseInt(parts[1]) || 1, options: null, correct: null
+      });
+    } else if (type === 'TF' || type === 'TRUEFALSE') {
+      if (parts.length < 3) { result.error = `Line ${i + 1}: TF needs marks + question`; return result; }
+      result.questions.push({
+        section, type: 'tf', text: parts[2],
+        marks: parseInt(parts[1]) || 1, options: null, correct: null
+      });
+    } else {
+      result.error = `Line ${i + 1}: Unknown type "${parts[0]}"`;
+      return result;
+    }
+  }
+  return result;
+}
+
+importBulkBtn.addEventListener('click', () => {
+  const text = bulkTextarea.value.trim();
+  if (!text) { alert('Please paste questions first!'); return; }
+  const parsed = parseBulk(text);
+  if (parsed.error) { alert(parsed.error); return; }
+  if (!parsed.questions.length) { alert('No valid questions found!'); return; }
+
+  parsed.sections.forEach(sec => { if (!sections.includes(sec)) sections.push(sec); });
+  parsed.questions.forEach(q => { questions.push({ ...q, id: 'q_' + (qIdCounter++) }); });
+
+  renderSectionList();
+  updateSectionDropdown();
+  renderQuestionsList();
+  renderPaper(); saveData();
+  bulkOverlay.classList.remove('active');
+  alert(`✅ ${parsed.questions.length} questions imported!`);
+});
+
+/* ================= DOWNLOAD PDF ================= */
+downloadBtn.addEventListener('click', () => {
+  if (questions.length === 0) { alert('Please add at least one question!'); return; }
+
+  const pages = paperWrapper.querySelectorAll('.a4-page');
+  const originalStyles = [];
+  pages.forEach((p, i) => {
+    originalStyles[i] = p.style.cssText;
+    p.style.transform = 'none';
+    p.style.boxShadow = 'none';
+    p.style.margin = '0';
+  });
+
+  const filename = (examName.value || 'Question-Paper').replace(/\s+/g, '-') + '.pdf';
+  const opt = {
+    margin: 0, filename,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: {
+      scale: 2, useCORS: true, allowTaint: true,
+      scrollY: 0, scrollX: 0, letterRendering: true, logging: false,
+      windowWidth: 794, windowHeight: 1123
+    },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+    pagebreak: {
+      mode: ['css', 'legacy'],
+      avoid: ['.paper-q', '.paper-header', '.paper-instructions',
+              '.section-heading', '.page-footer', '.page-watermark', '.page-header-repeat']
+    }
+  };
+
+  setTimeout(() => {
+    html2pdf().set(opt).from(paperWrapper).save().then(() => {
+      pages.forEach((p, i) => { p.style.cssText = originalStyles[i] || ''; });
+    });
+  }, 100);
+});
+
+/* ================= PRINT ================= */
+printBtn.addEventListener('click', () => {
+  if (questions.length === 0) { alert('Please add at least one question!'); return; }
+  paperWrapper.querySelectorAll('.a4-page').forEach(p => {
+    p.dataset.originalTransform = p.style.transform;
+    p.style.transform = 'none';
+  });
+  window.print();
+  setTimeout(() => {
+    paperWrapper.querySelectorAll('.a4-page').forEach(p => {
+      if (p.dataset.originalTransform) p.style.transform = p.dataset.originalTransform;
+    });
+  }, 500);
+});
+
+/* ================= CLEAR ALL ================= */
+clearAllBtn.addEventListener('click', () => {
+  if (!confirm('Delete all questions and clear settings?')) return;
+  questions = [];
+  sections = ['Section A'];
+  qIdCounter = 1;
+  watermarkEnabled = false;
+  borderEnabled = false;
+  separatorEnabled = true;
+  [schoolName, schoolAddress, examName, className, subjectName, timeDuration, maxMarks, studentLine, instructions]
+    .forEach(el => el.value = '');
+  watermarkText.value = 'SAMPLE';
+  watermarkToggle.classList.remove('active');
+  borderToggle.classList.remove('active');
+  separatorToggle.classList.add('active');
+  localStorage.removeItem(STORAGE_KEY);
+  renderSectionList();
+  updateSectionDropdown();
+  renderQuestionsList();
+  renderPaper();
+});
+
+/* ================= INIT ================= */
+function init() {
+  loadData();
+  renderQuestionsList();
+  renderPaper();
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (questions.length) renderPaper();
+    }, 300);
+  });
+}
+init();
+</script>
+</body>
+</html>
